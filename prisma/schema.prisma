@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DateStatus {
+  PROPOSED
+  ACCEPTED
+  ACTIVE
+  CHECKED_IN
+  COMPLETED
+  GHOSTED
+}
+
+model User {
+  id                String         @id @default(uuid())
+  name              String
+  phoneNumber       String         @unique
+  reliabilityScore  Int            @default(100)
+  proposedDates     DateContract[] @relation("Proposer")
+  invitedDates      DateContract[] @relation("Invitee")
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+}
+
+model Venue {
+  id          String         @id @default(uuid())
+  name        String
+  address     String
+  latitude    Float
+  longitude   Float
+  dates       DateContract[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model DateContract {
+  id                String     @id @default(uuid())
+  proposerId        String
+  inviteeId         String
+  venueId           String
+  scheduledAt       DateTime
+  status            DateStatus @default(PROPOSED)
+  
+  proposerCheckedIn Boolean    @default(false)
+  inviteeCheckedIn  Boolean    @default(false)
+
+  proposer          User       @relation("Proposer", fields: [proposerId], references: [id])
+  invitee           User       @relation("Invitee", fields: [inviteeId], references: [id])
+  venue             Venue      @relation(fields: [venueId], references: [id])
+
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
